@@ -101,8 +101,61 @@ voyage-law-2 embedding
        Structured legal memo JSON
               │
               ▼
-   Cytoscape.js graph + memo panel
+   Shared Neo4j subgraph → Cytoscape.js 2D / force-directed WebGL 3D + memo panel
 ```
+
+## Sample Questions and Graph Exploration
+
+The initial screen offers full sample questions for eligibility, claim construction,
+and obviousness. Selecting a card fills and focuses the query field without sending
+a request: edit it as needed, then select **Analyze** for a live query. The separate
+**Cached demo** buttons request saved responses (and fall back to live analysis if
+the cache is missing). The demo badge appears only for an actual cache hit.
+
+The frontend connects to `http://localhost:8000`, matching the default Uvicorn port.
+Set `VITE_API_URL` when starting/building the frontend to use a different backend,
+for example `VITE_API_URL=http://localhost:8001 npm run dev`.
+
+After a query, switch between **2D** and **3D** without repeating the query:
+
+- **2D:** pan the background, drag nodes, and scroll to zoom.
+- **3D:** drag to rotate, scroll to zoom, and right-drag to pan. The renderer is
+  loaded only when needed and requires WebGL; if it cannot start, use **Return to 2D**.
+- **Fit graph** resets the view. Use **Find node**, click a node, or select a
+  precedent in the memo to inspect it. Selection is shared between dimensions.
+- Filter relationship types independently. Nodes remain visible when their edges
+  are hidden. The details drawer lists all connections in the returned subgraph,
+  including filtered relationships, and lets you navigate to neighboring nodes.
+- Orange marks anchor cases, purple other cases, green patents, and blue claims.
+  Arrows show stored relationship direction. `SIMILAR_TO` is semantic similarity,
+  not a citation; it has no arrow and is dashed in 2D.
+
+Both views use the same Neo4j-backed data, not a separate synthetic 3D dataset.
+Live responses include case `CITES` and `SIMILAR_TO` relationships plus available
+`Patent → HAS_CLAIM → Claim → CONSTRUED_IN → Case` connections. Load claims with
+`python scripts/load_claims.py` after extracting claims to populate these connections.
+Patents are related through claims and case law; the current database does **not**
+store direct patent-to-patent citations, and the UI does not invent them.
+Old cached responses containing only cases still work in either dimension; regenerate
+the demo cache after loading claims to include patents and claims.
+
+Graph results are bounded for browser readability. A notice identifies truncated
+results. A graph is a query-specific subset, not the entire patent corpus, and 3D
+positions are a visual layout, not legal relevance or similarity measurements.
+
+### Validation
+
+```bash
+cd frontend
+npm run lint
+npm run build
+node --test src/graphData.test.js
+cd ..
+python -m unittest discover -s tests -v
+```
+
+Backend regressions mock Neo4j and external services; a live integration check
+requires the configured Neo4j database and API credentials from the quick start.
 
 ## Demo Queries (use with demo=true for cached responses)
 

@@ -1,20 +1,9 @@
-import { useState, useRef, useCallback, useEffect } from 'react'
-import CytoscapeComponent from 'react-cytoscapejs'
-import cytoscape from 'cytoscape'
-import dagre from 'cytoscape-dagre'
+import { useState, useRef } from 'react'
+import GraphPanel from './GraphPanel'
+import { normalizeGraph } from './graphData'
 import './App.css'
 
-cytoscape.use(dagre)
-
-const API = 'http://localhost:8001'
-
-const NODE_COLORS = {
-  Case: '#8B5CF6',
-  anchor: '#F97316',
-  midpage: '#22C55E',
-  Court: '#F59E0B',
-  Judge: '#6B7280',
-}
+const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 const DEMO_QUERIES = {
   eligibility: 'How has the Federal Circuit treated software patent eligibility under Alice after 2019? Which judges apply the two-step test most strictly?',
@@ -52,103 +41,14 @@ export default function App() {
   const [error, setError] = useState(null)
   const [selectedNode, setSelectedNode] = useState(null)
   const [demoMode, setDemoMode] = useState(false)
-  const cyRef = useRef(null)
-  const containerRef = useRef(null)
-
-  const buildElements = useCallback((m) => {
-    if (!m?.subgraph) return []
-    const { nodes, edges } = m.subgraph
-    const anchorIds = new Set(m.anchor_cases || [])
-
-    const cyNodes = nodes.map(n => ({
-      data: {
-        id: n.id,
-        label: (n.citation || n.id).split(',')[0].slice(0, 28),
-        citation: n.citation,
-        holding: n.holding_summary,
-        date: n.date,
-        court: n.court,
-        isAnchor: anchorIds.has(n.id),
-        color: anchorIds.has(n.id) ? NODE_COLORS.anchor : NODE_COLORS.Case,
-      },
-    }))
-
-    const cyEdges = (edges || []).map((e, i) => ({
-      data: { id: `e${i}`, source: e.source, target: e.target, type: e.type },
-    }))
-
-    return [...cyNodes, ...cyEdges]
-  }, [])
-
-  // Run dagre layout imperatively and fit after layoutstop
-  const elements = memo ? buildElements(memo) : []
-
-  useEffect(() => {
-    const cy = cyRef.current
-    if (!cy || elements.length === 0) return
-    const lay = cy.layout({
-      name: 'dagre',
-      rankDir: 'BT',
-      nodeSep: 60,
-      rankSep: 80,
-      padding: 40,
-      animate: true,
-      animationDuration: 600,
-    })
-    lay.on('layoutstop', () => {
-      cy.fit(undefined, 40)
-      cy.center()
-    })
-    lay.run()
-  }, [elements])
-
-  // ResizeObserver — keeps canvas correct on window resize
-  useEffect(() => {
-    const container = containerRef.current
-    if (!container) return
-    const ro = new ResizeObserver(() => {
-      if (cyRef.current) cyRef.current.resize()
-    })
-    ro.observe(container)
-    return () => ro.disconnect()
-  }, [])
-
-  const stylesheet = [
-    {
-      selector: 'node',
-      style: {
-        'background-color': 'data(color)',
-        'label': 'data(label)',
-        'color': '#fff',
-        'font-size': 9,
-        'text-valign': 'center',
-        'text-halign': 'center',
-        'width': 90,
-        'height': 38,
-        'shape': 'round-rectangle',
-        'text-wrap': 'wrap',
-        'text-max-width': 84,
-      },
-    },
-    {
-      selector: 'node[?isAnchor]',
-      style: { 'border-width': 3, 'border-color': '#fff', 'width': 108, 'height': 46, 'font-weight': 700, 'font-size': 10 },
-    },
-    { selector: 'node:selected', style: { 'border-width': 3, 'border-color': '#FCD34D' } },
-    {
-      selector: 'edge[type = "CITES"]',
-      style: { 'width': 1.5, 'line-color': '#8B5CF6', 'target-arrow-color': '#8B5CF6', 'target-arrow-shape': 'triangle', 'curve-style': 'bezier', 'opacity': 0.75 },
-    },
-    {
-      selector: 'edge[type = "SIMILAR_TO"]',
-      style: { 'width': 1, 'line-color': '#8B5CF6', 'line-style': 'dashed', 'curve-style': 'bezier', 'opacity': 0.4 },
-    },
-  ]
+  const inputRef = useRef(null)
+  const requestPending = useRef(false)
 
   async function handleQuery(q, isDemo) {
     const finalQ = q || question
-    if (!finalQ.trim()) return
-    setLoading(true); setError(null); setMemo(null); setSelectedNode(null); setDemoMode(!!isDemo)
+    if (!finalQ.trim() || requestPending.current) return
+    requestPending.current = true
+    setLoading(true); setError(null); setMemo(null); setSelectedNode(null); setDemoMode(false)
     try {
       const res = await fetch(`${API}/query`, {
         method: 'POST',
@@ -156,23 +56,23 @@ export default function App() {
         body: JSON.stringify({ question: finalQ, demo: !!isDemo }),
       })
       if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`)
-      setMemo(await res.json())
+      const result = await res.json()
+      setMemo(result)
+      setDemoMode(!!result._demo_mode)
     } catch (e) {
       setError(e.message)
     } finally {
       setLoading(false)
+      requestPending.current = false
     }
   }
 
   function highlightCase(citation) {
-    if (!cyRef.current) return
-    cyRef.current.nodes().forEach(n => {
-      const c = n.data('citation') || ''
-      if (c === citation || c.includes(citation.split(',')[0])) {
-        n.select()
-        cyRef.current.animate({ fit: { eles: n, padding: 100 } }, { duration: 500 })
-      }
-    })
+    if (!citation) return
+    const graph = normalizeGraph(memo?.subgraph, memo?.anchor_cases)
+    const node = graph.nodes.find(n => n.citation === citation) ||
+      graph.nodes.find(n => n.citation?.includes(citation.split(',')[0]))
+    if (node) setSelectedNode(node)
   }
 
   return (
@@ -187,102 +87,47 @@ export default function App() {
 
       <div className="search-row">
         <input
+          ref={inputRef}
           className="search-input"
+          aria-label="Patent litigation question"
           placeholder="Ask a patent litigation question…"
           value={question}
           onChange={e => setQuestion(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && handleQuery(question, false)}
         />
-        <button className="btn-primary" onClick={() => handleQuery(question, false)} disabled={loading}>
+        <button className="btn-primary" onClick={() => handleQuery(question, false)} disabled={loading || !question.trim()}>
           {loading ? 'Analyzing…' : 'Analyze'}
         </button>
       </div>
 
+      {!memo && !loading && <section className="sample-questions" aria-label="Sample questions">
+        <div className="sample-heading">Start with a sample question <span>Choose one, edit it, then Analyze using live data.</span></div>
+        <div className="sample-grid">
+          {Object.entries(DEMO_QUERIES).map(([key, q]) => (
+            <button key={key} className="sample-card" onClick={() => {
+              setQuestion(q)
+              inputRef.current?.focus()
+            }}>
+              <strong>{key.replaceAll('_', ' ')}</strong>
+              <span>{q}</span>
+            </button>
+          ))}
+        </div>
+      </section>}
+
       <div className="demo-pills">
-        <span className="demo-label">Demo:</span>
+        <span className="demo-label">Cached demo:</span>
         {Object.entries(DEMO_QUERIES).map(([key, q]) => (
-          <button key={key} className="pill" onClick={() => { setQuestion(q); handleQuery(q, true) }}>
+          <button key={key} className="pill" disabled={loading} onClick={() => { setQuestion(q); handleQuery(q, true) }}>
             {key.replace(/_/g, ' ')}
           </button>
         ))}
       </div>
 
-      {error && <div className="error-bar">⚠ {error}</div>}
+      {error && <div className="error-bar" role="alert">⚠ {error}</div>}
 
       <div className="main-content">
-        {/* Graph panel */}
-        <div className="graph-panel">
-          <div ref={containerRef} className="cy-container">
-          {elements.length > 0 ? (
-            <CytoscapeComponent
-              elements={elements}
-              stylesheet={stylesheet}
-              layout={{ name: 'preset' }}
-              style={{ width: '100%', height: '100%' }}
-              cy={cy => {
-                cyRef.current = cy
-                cy.on('tap', 'node', e => {
-                  const n = e.target
-                  setSelectedNode({
-                    id: n.id(),
-                    citation: n.data('citation'),
-                    holding: n.data('holding'),
-                    date: n.data('date'),
-                    court: n.data('court'),
-                    isAnchor: n.data('isAnchor'),
-                    hops: n.data('hops'),
-                  })
-                })
-              }}
-            />
-          ) : (
-            <div className="graph-empty">
-              {loading
-                ? <div className="loading-msg">Traversing knowledge graph…</div>
-                : <div className="graph-placeholder">
-                    <div style={{ fontSize: 48, marginBottom: 12, opacity: 0.3 }}>⬡</div>
-                    <div>Run a query to visualize the patent citation graph</div>
-                  </div>
-              }
-            </div>
-          )}
-          </div>
-
-          {selectedNode && (
-            <div className="node-drawer">
-              <button className="drawer-close" onClick={() => setSelectedNode(null)}>✕</button>
-              <div className="drawer-badges">
-                {selectedNode.isAnchor
-                  ? <span className="drawer-badge anchor">Key Case</span>
-                  : <span className="drawer-badge related">Related Precedent</span>}
-                {selectedNode.hops > 0 && (
-                  <span className="drawer-badge hops">{selectedNode.hops === 1 ? '1 step away' : `${selectedNode.hops} steps away`}</span>
-                )}
-              </div>
-              <div className="drawer-citation">{selectedNode.citation}</div>
-              <div className="drawer-meta">
-                <span className="drawer-court">{(selectedNode.court || '').toUpperCase()}</span>
-                {selectedNode.date && <span> · {selectedNode.date.slice(0, 4)}</span>}
-              </div>
-              <div className="drawer-section-label">What the court decided</div>
-              <div className="drawer-holding">{selectedNode.holding || 'No summary available.'}</div>
-              <div className="drawer-section-label" style={{ marginTop: 10 }}>Why it matters</div>
-              <div className="drawer-layman">
-                {selectedNode.isAnchor
-                  ? 'This is one of the central cases driving the analysis. The court\'s ruling here directly shapes how similar patent disputes are decided today.'
-                  : `This case was cited ${selectedNode.hops === 1 ? 'directly' : `${selectedNode.hops} steps removed`} from the key cases. It supports or refines the legal rules established by those earlier decisions.`}
-              </div>
-            </div>
-          )}
-
-          <div className="legend">
-            {[['Anchor', '#F97316'], ['Case', '#8B5CF6'], ['Court', '#F59E0B'], ['Judge', '#6B7280']].map(([l, c]) => (
-              <span key={l} className="leg-item"><span className="leg-dot" style={{ background: c }} />{l}</span>
-            ))}
-            <span className="leg-item"><span className="leg-line solid" />Cites</span>
-            <span className="leg-item"><span className="leg-line dashed" />Similar</span>
-          </div>
-        </div>
+        <GraphPanel memo={memo} loading={loading} selectedNode={selectedNode} onSelect={setSelectedNode} />
 
         {/* Memo panel */}
         <div className="memo-panel">
@@ -324,7 +169,14 @@ export default function App() {
                 <div className="section-title">Precedent Chain ({(memo.precedent_chain || []).length} cases)</div>
                 <div className="precedent-list">
                   {(memo.precedent_chain || []).map((p, i) => (
-                    <div key={i} className="prec-item" onClick={() => highlightCase(p.citation)}>
+                    <div key={i} className="prec-item" role="button" tabIndex={0}
+                      onClick={() => highlightCase(p.citation)}
+                      onKeyDown={event => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault()
+                          highlightCase(p.citation)
+                        }
+                      }}>
                       <div className="prec-header">
                         <TrustBadge verified={p.trust_verified} />
                         <span className="prec-citation">{p.citation}</span>

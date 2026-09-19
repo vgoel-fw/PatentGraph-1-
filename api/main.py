@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -21,6 +21,7 @@ from graph.queries import (
     get_full_subgraph,
     get_judge_pattern,
     get_precedent_chain,
+    validate_case_ids,
 )
 from llm.query import run_patent_query
 from llm.verify import verify_citations
@@ -88,9 +89,12 @@ async def query(body: QueryBody):
 
 
 @app.get("/graph/case/{case_id}")
-async def get_case_subgraph(case_id: str, depth: int = 2):
+async def get_case_subgraph(case_id: str, depth: int = Query(default=2, ge=1, le=3)):
     try:
+        validate_case_ids([case_id])
         return get_precedent_chain(case_id, depth)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -106,11 +110,13 @@ async def get_judge_rulings(judge_name: str):
 @app.get("/graph/subgraph")
 async def get_subgraph(ids: str):
     """Comma-separated list of case IDs."""
-    node_ids = [i.strip() for i in ids.split(",") if i.strip()]
-    if not node_ids:
+    if not ids.strip():
         raise HTTPException(status_code=400, detail="No IDs provided")
     try:
+        node_ids = validate_case_ids([i.strip() for i in ids.split(",")])
         return get_full_subgraph(node_ids)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

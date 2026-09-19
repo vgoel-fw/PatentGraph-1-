@@ -13,7 +13,7 @@ load_dotenv()
 
 sys.path.insert(0, str(__import__("pathlib").Path(__file__).parent.parent))
 
-from graph.queries import find_cases_by_citation, get_precedent_chain
+from graph.queries import get_full_subgraph, get_precedent_chain, normalize_graph
 from llm.prompts import SYSTEM_PROMPT
 from scripts.midpage_client import MidpageClient
 
@@ -43,7 +43,8 @@ def run_patent_query(attorney_question: str) -> dict:
     # Step 1: Find anchor cases directly in Neo4j via keyword search
     print("  [1/3] Finding anchor cases in Neo4j…")
     from graph.queries import _run
-    subgraph_nodes, subgraph_edges = [], []
+    subgraph_nodes, subgraph_edges = {}, []
+    graph_truncated = False
     seen: set[str] = set()
     anchor_ids: list[str] = []
 
@@ -83,17 +84,21 @@ def run_patent_query(attorney_question: str) -> dict:
 
     # Step 2: Expand each anchor into its precedent chain
     print("  [2/3] Expanding precedent chains via Neo4j…")
-    seen.clear()  # reset so anchor nodes are included in subgraph
+    anchor_ids = [case["id"] for case in anchor_cases[:5]]
+    for case in anchor_cases[:5]:
+        subgraph_nodes[case["id"]] = {
+            **case, "date": case.get("date_filed"), "hops": 0,
+            "type": "Case", "label": case.get("citation") or case["id"], "is_anchor": True,
+        }
     for gc in anchor_cases[:5]:
         gid = gc["id"]
-        anchor_ids.append(gid)
         try:
             chain = get_precedent_chain(gid, depth=2)
+            graph_truncated = graph_truncated or chain.get("truncated", False)
             for n in chain["nodes"]:
-                if n["id"] not in seen:
-                    seen.add(n["id"])
-                    n["is_anchor"] = (n["id"] == gid)
-                    subgraph_nodes.append(n)
+                previous = subgraph_nodes.get(n["id"])
+                if previous is None or n.get("hops", 3) < previous.get("hops", 3):
+                    subgraph_nodes[n["id"]] = {**n, "is_anchor": n["id"] in anchor_ids}
             subgraph_edges.extend(chain["edges"])
         except Exception as e:
             print(f"    WARNING: graph traversal failed for {gid}: {e}")
@@ -115,17 +120,29 @@ def run_patent_query(attorney_question: str) -> dict:
         print(f"    WARNING: Midpage failed: {e}")
         midpage_text = "[Midpage retrieval unavailable]"
 
-    unique_nodes = subgraph_nodes[:20]
-    unique_edges = list({(e["source"], e["target"]): e for e in subgraph_edges}.values())
-    subgraph_json = {"nodes": unique_nodes, "edges": unique_edges}
-    print(f"    Subgraph: {len(unique_nodes)} nodes, {len(unique_edges)} edges")
+    try:
+        enriched = get_full_subgraph(list(subgraph_nodes))
+        graph_truncated = graph_truncated or enriched.get("truncated", False)
+        for node in enriched["nodes"]:
+            previous = subgraph_nodes.get(node["id"], {})
+            subgraph_nodes[node["id"]] = {
+                **previous, **node, "is_anchor": node["id"] in anchor_ids,
+            }
+        subgraph_edges.extend(enriched["edges"])
+    except Exception as e:
+        print(f"    WARNING: graph enrichment failed: {e}")
+    subgraph_json = normalize_graph(list(subgraph_nodes.values()), subgraph_edges)
+    subgraph_json["truncated"] = graph_truncated
+    memo_nodes = [n for n in subgraph_json["nodes"] if n.get("type", "Case") == "Case"][:20]
+    memo_graph = normalize_graph(memo_nodes, subgraph_json["edges"])
+    print(f"    Subgraph: {len(subgraph_json['nodes'])} nodes, {len(subgraph_json['edges'])} edges")
 
     # Step 3: Groq call
     print("  [3/3] Calling Groq (Llama 3.3 70B)…")
     user_message = f"""ATTORNEY QUESTION: {attorney_question}
 
-SUBGRAPH ({len(unique_nodes)} cases from knowledge graph):
-{json.dumps(subgraph_json, indent=2)}
+SUBGRAPH ({len(memo_nodes)} cases from knowledge graph):
+{json.dumps(memo_graph, indent=2)}
 
 LIVE CASE LAW (Midpage, real-time retrieval):
 {midpage_text}
