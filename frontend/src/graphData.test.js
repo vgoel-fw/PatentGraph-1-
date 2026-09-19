@@ -51,4 +51,16 @@ describe('shared 2D/3D graph data', () => {
     assert.equal(graph.nodes[1].scope_ruling, 'narrow')
     assert.equal(graph.edges[1].target, 'case-1')
   })
+
+  it('exposes stored Neo4j similarity weights without interpreting citation weights as similarity', () => {
+    const graph = normalizeGraph({
+      nodes: [{ id: 'a' }, { id: 'b' }],
+      edges: [
+        { source: 'a', target: 'b', type: 'SIMILAR_TO', weight: 0.91 },
+        { source: 'a', target: 'b', type: 'CITES', weight: 1 },
+      ],
+    })
+    assert.equal(graph.edges[0].score, 0.91)
+    assert.equal(graph.edges[1].score, undefined)
+  })
 })

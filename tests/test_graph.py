@@ -59,7 +59,7 @@ class GraphQueryTests(unittest.TestCase):
                 self.assertIn(f"CITES*1..{depth}", cypher)
                 self.assertIn("min(length(path))", cypher)
                 self.assertIn("WHERE ancestor <> c", cypher)
-                self.assertLess(cypher.index("min(length(path))"), cypher.index("LIMIT 25"))
+                self.assertLess(cypher.index("min(length(path))"), cypher.index("LIMIT 26"))
                 self.assertEqual([n["hops"] for n in graph["nodes"]], [0, 1])
                 for node in graph["nodes"]:
                     self.assertEqual(node["date"], "2020-01-01")
@@ -67,7 +67,19 @@ class GraphQueryTests(unittest.TestCase):
                     self.assertEqual(node["type"], "Case")
                     self.assertEqual(node["label"], node["citation"])
                 self.assertEqual(len(graph["edges"]), 1)
+                self.assertFalse(graph["truncated"])
                 self.assert_integrity(graph)
+
+    def test_chain_reports_truncation_without_dangling_edges(self):
+        with patch.object(queries, "_run", side_effect=[
+            [case(str(i), hops=1) for i in range(26)], [case("a")],
+            [edge("a", str(i)) for i in range(26)],
+        ]):
+            graph = queries.get_precedent_chain("a")
+        self.assertTrue(graph["truncated"])
+        self.assertEqual(len(graph["nodes"]), 26)
+        self.assertEqual(len(graph["edges"]), 25)
+        self.assert_integrity(graph)
 
     def test_missing_anchor_and_empty_subgraph_do_not_invent_nodes(self):
         with patch.object(queries, "_run", side_effect=[[], []]):
@@ -115,6 +127,8 @@ class GraphQueryTests(unittest.TestCase):
         edges = {e["type"]: e for e in graph["edges"]}
         self.assertEqual(len(graph["edges"]), 4)
         self.assertEqual(edges["SIMILAR_TO"]["weight"], 0.87)
+        self.assertEqual(edges["SIMILAR_TO"]["score"], 0.87)
+        self.assertFalse(graph["truncated"])
         self.assertEqual(edges["CITES"]["context"], "cited")
         self.assertEqual(edges["CONSTRUED_IN"]["note"], "construction")
 
@@ -135,11 +149,12 @@ class GraphQueryTests(unittest.TestCase):
             queries, "_run", side_effect=[[case("a")], [], related, relationships]
         ) as run:
             graph = queries.get_full_subgraph(["a"])
-            self.assertEqual(run.call_args_list[2].args[1]["limit"], 100)
+            self.assertEqual(run.call_args_list[2].args[1]["limit"], 101)
             self.assertEqual(len(run.call_args_list[3].args[1]["claims"]), 50)
             self.assertEqual(len(run.call_args_list[3].args[1]["patents"]), 50)
         self.assertEqual(len(graph["nodes"]), 101)
         self.assertEqual(len(graph["edges"]), 100)
+        self.assertTrue(graph["truncated"])
         self.assert_integrity(graph)
         shared = [
             {"claim": {"id": str(i)}, "patents": [{"number": "shared"}]}
@@ -219,6 +234,7 @@ class QueryOrchestrationTests(unittest.TestCase):
         ]
         case_edges = [edge("a", c["id"]) for c in cases[1:]]
         enriched = {
+            "truncated": True,
             "nodes": chain_nodes + [
                 {"id": "claim:cl", "type": "Claim", "label": "a processor"},
                 {"id": "patent:123", "type": "Patent", "label": "Patent 123"},
@@ -246,6 +262,7 @@ class QueryOrchestrationTests(unittest.TestCase):
         full.assert_called_once_with([c["id"] for c in cases])
         self.assertEqual(memo["anchor_cases"], ["a", "b"])
         self.assertEqual(len(memo["subgraph"]["nodes"]), 28)
+        self.assertTrue(memo["subgraph"]["truncated"])
         self.assert_integrity(memo["subgraph"])
         self.assertTrue(all(n["is_anchor"] for n in memo["subgraph"]["nodes"][:2]))
         message = client.chat.completions.create.call_args.kwargs["messages"][1]["content"]

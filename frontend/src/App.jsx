@@ -124,7 +124,7 @@ export default function App() {
         ))}
       </div>
 
-      {error && <div className="error-bar">⚠ {error}</div>}
+      {error && <div className="error-bar" role="alert">⚠ {error}</div>}
 
       <div className="main-content">
         <GraphPanel memo={memo} loading={loading} selectedNode={selectedNode} onSelect={setSelectedNode} />

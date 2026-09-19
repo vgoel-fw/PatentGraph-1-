@@ -44,6 +44,7 @@ def run_patent_query(attorney_question: str) -> dict:
     print("  [1/3] Finding anchor cases in Neo4j…")
     from graph.queries import _run
     subgraph_nodes, subgraph_edges = {}, []
+    graph_truncated = False
     seen: set[str] = set()
     anchor_ids: list[str] = []
 
@@ -93,6 +94,7 @@ def run_patent_query(attorney_question: str) -> dict:
         gid = gc["id"]
         try:
             chain = get_precedent_chain(gid, depth=2)
+            graph_truncated = graph_truncated or chain.get("truncated", False)
             for n in chain["nodes"]:
                 previous = subgraph_nodes.get(n["id"])
                 if previous is None or n.get("hops", 3) < previous.get("hops", 3):
@@ -120,6 +122,7 @@ def run_patent_query(attorney_question: str) -> dict:
 
     try:
         enriched = get_full_subgraph(list(subgraph_nodes))
+        graph_truncated = graph_truncated or enriched.get("truncated", False)
         for node in enriched["nodes"]:
             previous = subgraph_nodes.get(node["id"], {})
             subgraph_nodes[node["id"]] = {
@@ -129,6 +132,7 @@ def run_patent_query(attorney_question: str) -> dict:
     except Exception as e:
         print(f"    WARNING: graph enrichment failed: {e}")
     subgraph_json = normalize_graph(list(subgraph_nodes.values()), subgraph_edges)
+    subgraph_json["truncated"] = graph_truncated
     memo_nodes = [n for n in subgraph_json["nodes"] if n.get("type", "Case") == "Case"][:20]
     memo_graph = normalize_graph(memo_nodes, subgraph_json["edges"])
     print(f"    Subgraph: {len(subgraph_json['nodes'])} nodes, {len(subgraph_json['edges'])} edges")

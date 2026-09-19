@@ -63,6 +63,8 @@ def normalize_graph(nodes: list[dict], edges: list[dict]) -> dict:
     for row in edges:
         edge = {**(row.get("properties") or {}), **row}
         edge.pop("properties", None)
+        if edge["type"] == "SIMILAR_TO" and "score" not in edge and "weight" in edge:
+            edge["score"] = edge["weight"]
         if edge["source"] not in unique_nodes or edge["target"] not in unique_nodes:
             continue
         key = (edge["source"], edge["target"], edge["type"])
@@ -86,7 +88,7 @@ def get_precedent_chain(case_id: str, depth: int = 3) -> dict:
            ancestor.court           AS court,
            hops                     AS hops
     ORDER BY hops ASC, ancestor.date_filed DESC, ancestor.id
-    LIMIT 25
+    LIMIT 26
     """
     rows = _run(cypher, {"case_id": case_id})
 
@@ -98,7 +100,7 @@ def get_precedent_chain(case_id: str, depth: int = 3) -> dict:
     if not anchor_rows:
         return {"nodes": [], "edges": []}
     nodes = [_case_node({**anchor_rows[0], "hops": 0})]
-    nodes.extend(_case_node(row) for row in rows if row["id"] != case_id)
+    nodes.extend(_case_node(row) for row in rows[:25] if row["id"] != case_id)
 
     node_ids = [n["id"] for n in nodes]
     edge_rows = _run(
@@ -106,7 +108,7 @@ def get_precedent_chain(case_id: str, depth: int = 3) -> dict:
         "RETURN a.id AS source, b.id AS target, type(r) AS type, properties(r) AS properties",
         {"ids": node_ids},
     )
-    return normalize_graph(nodes, edge_rows)
+    return {**normalize_graph(nodes, edge_rows), "truncated": len(rows) > 25}
 
 
 def find_cases_by_citation(citation_str: str) -> list[dict]:
@@ -193,14 +195,16 @@ def get_full_subgraph(node_ids: list[str]) -> dict:
         "WITH cl, collect(DISTINCT properties(p)) AS patents "
         "RETURN properties(cl) AS claim, patents "
         "ORDER BY cl.id",
-        {"ids": case_ids, "limit": MAX_AUXILIARY_NODES},
+        {"ids": case_ids, "limit": MAX_AUXILIARY_NODES + 1},
     )
     auxiliary = {}
+    truncated = False
     for row in related:
         claim = row["claim"]
         claim_id = f"claim:{claim['id']}"
         if claim_id not in auxiliary:
             if len(auxiliary) >= MAX_AUXILIARY_NODES or claim_id in case_ids:
+                truncated = True
                 continue
             auxiliary[claim_id] = {
                 **claim, "id": claim_id, "claim_id": claim["id"], "type": "Claim",
@@ -210,11 +214,15 @@ def get_full_subgraph(node_ids: list[str]) -> dict:
             if patent.get("number") is None:
                 continue
             patent_id = f"patent:{patent['number']}"
-            if patent_id not in auxiliary and patent_id not in case_ids and len(auxiliary) < MAX_AUXILIARY_NODES:
+            if patent_id in auxiliary:
+                continue
+            if patent_id not in case_ids and len(auxiliary) < MAX_AUXILIARY_NODES:
                 auxiliary[patent_id] = {
                     **patent, "id": patent_id, "type": "Patent",
                     "label": f"Patent {patent['number']}",
                 }
+            else:
+                truncated = True
     nodes.extend(auxiliary.values())
     if auxiliary:
         edges.extend(_run(
@@ -233,4 +241,4 @@ def get_full_subgraph(node_ids: list[str]) -> dict:
                 "patents": [n["number"] for n in auxiliary.values() if n["type"] == "Patent"],
             },
         ))
-    return normalize_graph(nodes, edges)
+    return {**normalize_graph(nodes, edges), "truncated": truncated}

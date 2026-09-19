@@ -24,7 +24,7 @@ export function normalizeGraph(subgraph, anchors = []) {
       ...node,
       id,
       type,
-      label: node.label || node.citation || node.number || id,
+      label: String(node.label || node.citation || node.number || id),
       holding: node.holding_summary || node.text_excerpt || '',
       date: node.date || node.date_filed,
       isAnchor: anchorIds.has(id),
@@ -38,7 +38,10 @@ export function normalizeGraph(subgraph, anchors = []) {
     if (!nodesById.has(source) || !nodesById.has(target)) continue
     const type = edge.type || 'RELATED'
     const id = JSON.stringify([source, target, type])
-    if (!edgesById.has(id)) edgesById.set(id, { ...edge, id, source, target, type })
+    if (!edgesById.has(id)) edgesById.set(id, {
+      ...edge, id, source, target, type,
+      score: edge.score ?? (type === 'SIMILAR_TO' ? edge.weight : undefined),
+    })
   }
   return { nodes: [...nodesById.values()], edges: [...edgesById.values()] }
 }
