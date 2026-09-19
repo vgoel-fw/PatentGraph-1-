@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import GraphPanel from './GraphPanel'
 import { normalizeGraph } from './graphData'
+import { readSharedGraph } from './graphWorkspace'
 import './App.css'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
@@ -35,11 +36,18 @@ function TrustBadge({ verified }) {
 }
 
 export default function App() {
+  const [sharedState] = useState(readSharedGraph)
   const [question, setQuestion] = useState('')
-  const [memo, setMemo] = useState(null)
+  const [memo, setMemo] = useState(() => sharedState.snapshot ? {
+    subgraph: sharedState.snapshot.graph,
+    anchor_cases: sharedState.snapshot.graph.nodes.filter(node => node.isAnchor).map(node => node.id),
+    _graphSnapshot: sharedState.snapshot,
+  } : null)
+  const [graphRevision, setGraphRevision] = useState(0)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const [selectedNode, setSelectedNode] = useState(null)
+  const [error, setError] = useState(sharedState.error || null)
+  const [selectedNode, setSelectedNode] = useState(() => normalizeGraph(memo?.subgraph, memo?.anchor_cases)
+    .nodes.find(node => node.id === sharedState.snapshot?.state.selectedId) || null)
   const [demoMode, setDemoMode] = useState(false)
   const inputRef = useRef(null)
   const requestPending = useRef(false)
@@ -48,6 +56,7 @@ export default function App() {
     const finalQ = q || question
     if (!finalQ.trim() || requestPending.current) return
     requestPending.current = true
+    if (window.location.hash.startsWith('#graph=')) window.history.replaceState(null, '', window.location.pathname + window.location.search)
     setLoading(true); setError(null); setMemo(null); setSelectedNode(null); setDemoMode(false)
     try {
       const res = await fetch(`${API}/query`, {
@@ -58,6 +67,7 @@ export default function App() {
       if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`)
       const result = await res.json()
       setMemo(result)
+      setGraphRevision(previous => previous + 1)
       setDemoMode(!!result._demo_mode)
     } catch (e) {
       setError(e.message)
@@ -127,11 +137,18 @@ export default function App() {
       {error && <div className="error-bar" role="alert">⚠ {error}</div>}
 
       <div className="main-content">
-        <GraphPanel memo={memo} loading={loading} selectedNode={selectedNode} onSelect={setSelectedNode} />
+        <GraphPanel key={memo ? graphRevision : 'empty'} memo={memo} loading={loading} selectedNode={selectedNode} onSelect={setSelectedNode} />
 
         {/* Memo panel */}
         <div className="memo-panel">
-          {memo ? (
+          {memo?._graphSnapshot ? <div className="shared-notes">
+            <div className="section-title">Shared case narrative</div>
+            {Object.entries(memo._graphSnapshot.notes || {}).filter(([, note]) => note).map(([id, note]) => {
+              const node = normalizeGraph(memo.subgraph, memo.anchor_cases).nodes.find(value => value.id === id)
+              return node && <section key={id}><button onClick={() => setSelectedNode(node)}>{node.label}</button><p>{note}</p></section>
+            })}
+            {!Object.values(memo._graphSnapshot.notes || {}).some(Boolean) && <p>No notes included in this snapshot.</p>}
+          </div> : memo ? (
             <div className="memo-content">
               <div className="memo-summary">
                 <div className="section-title">Executive Summary</div>
