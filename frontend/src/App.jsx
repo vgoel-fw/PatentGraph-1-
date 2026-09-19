@@ -91,7 +91,6 @@ export default function App() {
         <div className="logo">⬡ PatentGraph <span className="logo-sub">Patent Litigation Intelligence</span></div>
         <div className="header-right">
           {demoMode && <span className="demo-badge">DEMO MODE</span>}
-          <span className="header-tag">Harvey Challenge · Stanford LLM×Law #6</span>
         </div>
       </div>
 
