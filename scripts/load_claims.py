@@ -38,7 +38,9 @@ def main():
     driver = GraphDatabase.driver(uri, auth=(user, pwd))
 
     with open(CLAIMS_CSV) as f:
-        rows = list(csv.DictReader(f))
+        rows = [r for r in csv.DictReader(f) if r.get("review_status") == "reviewed"
+                and r.get("patent_number") not in {None, "", "UNKNOWN"}
+                and r.get("claim_number") and r.get("claim_text_excerpt")]
 
     print(f"Loading {len(rows)} claim records…")
     with driver.session() as session:
