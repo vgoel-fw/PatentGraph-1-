@@ -21,7 +21,9 @@ CREATE_CLAIM = """
 MERGE (cl:Claim {id: $claim_id})
 SET cl.patent_number    = $patent_number,
     cl.text_excerpt     = $text_excerpt,
-    cl.scope_ruling     = $scope_ruling
+    cl.scope_ruling     = $scope_ruling,
+    cl.review_status   = "reviewed",
+    cl.claim_number    = $claim_number
 WITH cl
 MERGE (p:Patent {number: $patent_number})
 MERGE (p)-[:HAS_CLAIM]->(cl)
@@ -47,6 +49,7 @@ def main():
         for i, row in enumerate(rows):
             session.run(CREATE_CLAIM, {
                 "claim_id": row["claim_id"],
+                "claim_number": row["claim_number"],
                 "patent_number": row["patent_number"],
                 "text_excerpt": row["claim_text_excerpt"][:200],
                 "scope_ruling": row["scope_ruling"],

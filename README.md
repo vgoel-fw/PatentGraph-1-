@@ -164,3 +164,6 @@ requires the configured Neo4j database and API credentials from the quick start.
 2. **Claim Construction**: "What is the CAFC standard for means-plus-function construction under 35 USC 112(f)? How has it shifted since Williamson v. Citrix?"
 
 3. **Obviousness**: "After KSR, how do NDCA district courts handle obviousness challenges to software patents with UI claim elements?"
+
+Patent evidence now includes 103 source-backed mentions covering 80 patent numbers across 52 opinions, four public patent-publication records, and a searchable workspace for counsel.
+Outcome comparisons now use reviewed, litigation-deduplicated cohorts with uncertainty intervals and a chronological evaluation tool; numerical estimates are withheld until sufficient labeled data exists.

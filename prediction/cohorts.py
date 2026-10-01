@@ -8,7 +8,7 @@ from datetime import date
 from math import sqrt
 from pathlib import Path
 from typing import Literal
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 class Context(BaseModel):
     model_config=ConfigDict(extra='forbid')
@@ -16,6 +16,15 @@ class Context(BaseModel):
     forum: Literal['district_court','federal_circuit','ptab','supreme_court']
     stage: Literal['pleadings','summary_judgment','trial','appeal','final_written_decision']
     as_of: date = Field(default_factory=date.today)
+
+    @model_validator(mode='after')
+    def valid_posture(self):
+        stages={'district_court':{'pleadings','summary_judgment','trial'},
+                'federal_circuit':{'appeal'},'supreme_court':{'appeal'},
+                'ptab':{'final_written_decision'}}
+        if self.stage not in stages[self.forum]:
+            raise ValueError('Select a procedural stage applicable to this forum.')
+        return self
 
 MIN_CASES=20
 TARGET='Patentee-favorable substantive determination on the selected issue'
@@ -46,8 +55,12 @@ def wilson(successes,total):
 def estimate(rows, context, exclude_litigation=None):
     if not isinstance(context,Context):context=Context.model_validate(context)
     groups=defaultdict(list)
+    aliases=defaultdict(set)
     for row in rows:
-        if eligible(row,context) and row['litigation_id']!=exclude_litigation:
+        if eligible(row,context): aliases[row['case_id']].add(row['litigation_id'])
+    ambiguous={case_id for case_id,ids in aliases.items() if len(ids)>1}
+    for row in rows:
+        if eligible(row,context) and row['litigation_id']!=exclude_litigation and row['case_id'] not in ambiguous:
             groups[row['litigation_id']].append(row)
     selected=[]; conflicts=0
     for group in groups.values():
@@ -61,7 +74,7 @@ def estimate(rows, context, exclude_litigation=None):
     return {'status':'historical_cohort' if sufficient else 'insufficient_data',
         'target':TARGET,'context':context.model_dump(mode='json'),
         'litigation_count':n,'favorable_count':wins,'adverse_count':n-wins,
-        'minimum_cases':MIN_CASES,'excluded_conflicting_litigations':conflicts,
+        'minimum_cases':MIN_CASES,'excluded_ambiguous_case_ids':len(ambiguous),'excluded_conflicting_litigations':conflicts,
         'historical_rate':wins/n if sufficient else None,
         'interval_95':wilson(wins,n) if sufficient else None,
         'litigation_risk_score':None,
