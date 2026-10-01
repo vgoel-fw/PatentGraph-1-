@@ -37,14 +37,12 @@ def extract_patent_numbers(text: str) -> list[str]:
         for m in pat.finditer(text):
             num = m.group(1).replace(",", "").strip()
             found.add(num)
-    return list(found)
+    return sorted(found)
 
 
 def extract_scope_ruling(text: str) -> str:
-    for label, pat in SCOPE_PATTERNS.items():
-        if pat.search(text):
-            return label
-    return "unspecified"
+    # Whole-opinion keyword matches cannot establish a claim-level disposition.
+    return "unreviewed"
 
 
 def extract_construed_as_snippet(text: str) -> str:
@@ -62,9 +60,9 @@ def main():
     claim_counter = 0
     output_rows = []
 
-    for case_path in RAW_DIR.glob("*.json"):
+    for case_path in sorted(RAW_DIR.glob("*.json")):
         case = json.loads(case_path.read_text())
-        case_id = case.get("id") or case.get("case_id") or case_path.stem
+        case_id = str(case.get("id") or case.get("case_id") or case_path.stem)
         if case_id not in corpus_ids:
             continue
 
@@ -74,10 +72,10 @@ def main():
 
         patent_numbers = extract_patent_numbers(text)
         scope_ruling = extract_scope_ruling(text)
-        claim_text_excerpt = extract_construed_as_snippet(text)
+        claim_text_excerpt = ""
 
         if not patent_numbers:
-            patent_numbers = ["UNKNOWN"]
+            continue
 
         for pat_num in patent_numbers:
             claim_id = f"cl_{claim_counter:06d}"

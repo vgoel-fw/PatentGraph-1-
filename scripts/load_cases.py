@@ -44,11 +44,12 @@ MERGE (c)-[:DECIDED_BY]->(j)
 
 
 def get_holding_summary(row: dict) -> str:
-    path = Path(row["full_text_path"])
+    path = RAW_DIR / f"{row['case_id']}.json"
     if path.exists():
         case = json.loads(path.read_text())
         text = case.get("full_text") or case.get("text") or case.get("opinion") or ""
-        return text[:500]
+        from patent_data.corpus import plain_text
+        return plain_text(text)[:500]
     return ""
 
 
