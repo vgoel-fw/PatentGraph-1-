@@ -705,3 +705,58 @@ textarea:focus-visible, input:focus-visible, summary:focus-visible { outline: 2p
   .graph-toolbar .node-picker { order: 2; }
   .memo-panel { overflow: visible; }
 }
+
+/* Counsel workspace: restrained typography, clear source records, explicit uncertainty. */
+:root { --bg:#f5f5f1; --surface:#ffffff; --surface2:#f1f3f3; --surface3:#e7eceb; --border:#d8dfdc; --border-light:#b5c2bd; --text:#25342f; --text-dim:#52655e; --text-muted:#65766e; --gold:#245a48; --gold-light:#245a48; --gold-dim:#315b4b; --gold-bg:#edf3ee; --text-h:#233c32; color-scheme:light; }
+#root { width:100%; max-width:none; text-align:left; border:0; }
+.header { box-shadow:none; min-height:64px; }
+.logo { font-family:Georgia,serif; font-size:23px; font-weight:400; }
+.logo-sub { font-family:system-ui,sans-serif; }
+.practice-tabs { display:flex; gap:28px; padding:0 28px; background:white; border-bottom:1px solid var(--border); flex-shrink:0; }
+.practice-tabs button { appearance:none; background:none; border:0; border-bottom:2px solid transparent; padding:16px 0; color:var(--text-dim); font:500 13px system-ui; cursor:pointer; }
+.practice-tabs button[aria-current] { color:var(--gold); border-color:var(--gold); }
+.practice-workspace { overflow:auto; flex:1; padding:38px clamp(20px,4vw,64px) 60px; }
+.practice-heading { max-width:850px; margin-bottom:30px; }
+.eyebrow { text-transform:uppercase; font-size:10px; letter-spacing:1.6px; color:var(--text-muted); font-weight:600; margin-bottom:14px; }
+.practice-heading h1 { font:400 clamp(27px,3vw,40px)/1.16 Georgia,serif; letter-spacing:-1px; margin:0 0 16px; color:var(--text); }
+.practice-heading p { font-size:14px; line-height:1.7; color:var(--text-dim); }
+.library-summary { display:flex; gap:35px; border-block:1px solid var(--border); padding:18px 0; margin-bottom:26px; color:var(--text-dim); font-size:12px; flex-wrap:wrap; }
+.library-summary strong { display:block; font:400 26px Georgia,serif; color:var(--text); margin-bottom:5px; }
+.library-search label,.cohort-form label { display:block; font-size:12px; font-weight:600; margin-bottom:8px; }
+.library-search > div { display:flex; gap:10px; max-width:720px; }
+.library-search input,.cohort-form select { min-width:0; width:100%; border:1px solid var(--border-light); background:white; color:var(--text); padding:11px 12px; border-radius:4px; font:14px system-ui; }
+.practice-workspace button[type=submit] { background:#245a48; color:white; border:0; border-radius:4px; padding:12px 18px; white-space:nowrap; font:500 13px system-ui; cursor:pointer; }
+.practice-workspace button:disabled { opacity:.6; cursor:wait; }
+.practice-note { font-size:12px; line-height:1.6; color:var(--text-dim); margin:16px 0 24px; max-width:1000px; }
+.patent-columns { display:grid; grid-template-columns:minmax(330px,1.2fr) minmax(320px,1fr); gap:24px; align-items:start; }
+.table-scroll { overflow:auto; }
+.practice-workspace table { width:100%; border-collapse:collapse; background:white; font-size:12px; }
+.practice-workspace caption { text-align:left; padding:13px 14px; background:#eaf0eb; color:#365346; }
+.practice-workspace th { text-align:left; font-weight:500; background:#f7f9f6; color:var(--text-dim); padding:12px 14px; border-bottom:1px solid var(--border); }
+.practice-workspace td { padding:15px 14px; border-bottom:1px solid var(--border); vertical-align:top; line-height:1.5; }
+.practice-workspace tr.selected { background:#edf4ee; }
+.patent-link { border:0; background:none; text-align:left; color:#245a48; text-decoration:underline; text-underline-offset:3px; cursor:pointer; font:600 12px system-ui; white-space:nowrap; }
+.patent-evidence { background:white; border:1px solid var(--border); padding:26px; border-radius:5px; min-height:300px; }
+.patent-evidence h2,.assessment-result h2 { font:400 26px/1.2 Georgia,serif; color:var(--text); margin:0 0 16px; }
+.patent-evidence h3 { font-size:14px; line-height:1.5; margin:0 0 8px; font-weight:600; }
+.patent-evidence article { margin-top:24px; padding-top:24px; border-top:1px solid var(--border); }
+.reference-meta { font-size:11px; color:var(--text-muted); margin:9px 0; line-height:1.6; }
+.patent-evidence blockquote { font:15px/1.75 Georgia,serif; border-left:2px solid #8ba995; padding-left:16px; margin:18px 0; white-space:pre-wrap; overflow-wrap:anywhere; }
+.practice-workspace a { color:#245a48; text-underline-offset:3px; font-size:12px; }
+.publication-record dl { display:grid; grid-template-columns:80px 1fr; gap:8px; font-size:12px; margin:18px 0; }
+.publication-record dt { color:var(--text-muted); }
+.publication-record p,.evidence-empty p { font-size:12px; line-height:1.7; color:var(--text-dim); margin-top:14px; }
+.cohort-form { display:grid; grid-template-columns:repeat(3,minmax(140px,1fr)) auto; gap:16px; align-items:end; max-width:1100px; }
+.cohort-form label { margin:0; }
+.cohort-form select { display:block; margin-top:10px; }
+.assessment-result { background:white; border:1px solid var(--border); padding:28px; border-radius:5px; max-width:1100px; }
+.assessment-result p,.assessment-result li { font-size:13px; line-height:1.8; color:var(--text-dim); }
+.assessment-result ul { padding-left:20px; }
+.assessment-result details { margin-top:24px; border-top:1px solid var(--border); padding-top:18px; }
+.assessment-result summary { font-size:13px; cursor:pointer; margin-bottom:10px; }
+.evidence-counts { display:flex; gap:30px; margin-top:24px; color:var(--text-dim); font-size:12px; }
+.evidence-counts strong { font-size:23px; display:block; color:var(--text); }
+.practice-error { color:#8c332a; margin:15px 0; }
+.practice-workspace :focus-visible,.practice-tabs :focus-visible { outline:2px solid #426e5a; outline-offset:3px; }
+@media(max-width:850px) { .patent-columns { grid-template-columns:1fr; } .cohort-form { grid-template-columns:1fr 1fr; } .practice-tabs { gap:18px; padding-inline:20px; } .logo-sub { display:none; } }
+@media(max-width:500px) { .cohort-form { grid-template-columns:1fr; } .library-search > div { flex-direction:column; } .practice-tabs { gap:14px; } .practice-tabs button { font-size:11px; } .library-summary { gap:22px; } }
