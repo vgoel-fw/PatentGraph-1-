@@ -125,3 +125,8 @@ async def get_subgraph(ids: str):
 @app.get("/health")
 async def health():
     return {"status": "ok", "service": "PatentGraph"}
+
+@app.get('/patents')
+def patent_library(q: str = Query(default='', max_length=200), limit: int = Query(default=30, ge=1, le=100)):
+    from patent_data.library import search
+    return search(q, limit)
