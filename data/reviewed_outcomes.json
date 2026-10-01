@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "target": "Patentee-favorable substantive determination on a specified issue",
+  "notice": "The existing landmark-opinion corpus has no attorney-reviewed outcome labels; no outcomes have been inferred from mentions or LLM text.",
+  "required_fields": ["case_id", "litigation_id", "citation", "decision_date", "issue", "forum", "stage", "outcome", "source_url", "source_quote", "review_status", "reviewer", "data_kind"],
+  "allowed_outcomes": ["patentee_favorable", "patentee_adverse", "mixed", "unresolved"],
+  "records": []
+}

@@ -12,7 +12,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from prediction.cohorts import Context, attach_assessment, estimate, load_outcomes
 
 load_dotenv()
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -64,8 +65,9 @@ def _match_demo_key(question: str) -> str | None:
 
 
 class QueryBody(BaseModel):
-    question: str
+    question: str = Field(min_length=1, max_length=20000)
     demo: bool = False
+    context: Context | None = None
 
 
 @app.post("/query")
@@ -77,13 +79,13 @@ async def query(body: QueryBody):
             cached = cache[key]
             cached["_demo_mode"] = True
             cached["_demo_key"] = key
-            return cached
+            return attach_assessment(cached, body.context)
         # Fall through to live if no cache hit
 
     try:
         memo = run_patent_query(body.question)
         memo = verify_citations(memo)
-        return memo
+        return attach_assessment(memo, body.context)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -130,3 +132,8 @@ async def health():
 def patent_library(q: str = Query(default='', max_length=200), limit: int = Query(default=30, ge=1, le=100)):
     from patent_data.library import search
     return search(q, limit)
+
+
+@app.post('/assessment')
+def outcome_assessment(context: Context):
+    return estimate(load_outcomes(), context)
