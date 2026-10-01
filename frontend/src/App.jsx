@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import GraphPanel from './GraphPanel'
+import PatentWorkspace, { AssessmentResult } from './PatentWorkspace'
 import { normalizeGraph } from './graphData'
 import { readSharedGraph } from './graphWorkspace'
 import './App.css'
@@ -10,12 +11,6 @@ const DEMO_QUERIES = {
   eligibility: 'How has the Federal Circuit treated software patent eligibility under Alice after 2019? Which judges apply the two-step test most strictly?',
   claim_construction: 'What is the CAFC standard for means-plus-function construction under 35 USC 112(f)? How has it shifted since Williamson v. Citrix?',
   obviousness: 'After KSR, how do NDCA district courts handle obviousness challenges to software patents with UI claim elements?',
-}
-
-function riskColor(score) {
-  if (score <= 3) return '#22C55E'
-  if (score <= 6) return '#F59E0B'
-  return '#EF4444'
 }
 
 function SourceBadge({ source }) {
@@ -37,6 +32,7 @@ function TrustBadge({ verified }) {
 
 export default function App() {
   const [sharedState] = useState(readSharedGraph)
+  const [workspace, setWorkspace] = useState(window.location.hash.startsWith('#graph=') ? 'research' : 'patents')
   const [question, setQuestion] = useState('')
   const [memo, setMemo] = useState(() => sharedState.snapshot ? {
     subgraph: sharedState.snapshot.graph,
@@ -94,6 +90,8 @@ export default function App() {
         </div>
       </div>
 
+      <nav className="practice-tabs" aria-label="Research workspace">{[['patents','Patent evidence'],['research','Precedent research'],['outcomes','Outcome comparison']].map(([id,label]) => <button key={id} aria-current={workspace === id ? 'page' : undefined} onClick={() => setWorkspace(id)}>{label}</button>)}</nav>
+      {workspace !== 'research' ? <PatentWorkspace key={workspace} api={API} view={workspace} /> : <>
       <div className="search-row">
         <input
           ref={inputRef}
@@ -155,18 +153,11 @@ export default function App() {
               </div>
 
               <div className="metrics-row">
-                <div className="risk-block">
-                  <div className="metric-label">Litigation Risk</div>
-                  <div className="risk-bar-wrap">
-                    <div className="risk-bar-fill" style={{ width: `${(memo.litigation_risk_score || 0) * 10}%`, background: riskColor(memo.litigation_risk_score) }} />
-                  </div>
-                  <div className="risk-num" style={{ color: riskColor(memo.litigation_risk_score) }}>{memo.litigation_risk_score}/10</div>
-                  <div className="risk-rationale">{memo.litigation_risk_rationale}</div>
-                </div>
+                <AssessmentResult result={memo.assessment || { status: 'context_required', reason: 'Open Outcome comparison to choose an issue, forum, and stage.' }} />
 
                 <div className={`circuit-split-block ${memo.circuit_split?.exists ? 'split-yes' : 'split-no'}`}>
                   <div className="metric-label">Circuit Split</div>
-                  <div className="split-status">{memo.circuit_split?.exists ? '⚠ Yes' : '✓ No'}</div>
+                  <div className="split-status">{memo.circuit_split?.exists ? 'Reported tension' : 'Not established'}</div>
                   {memo.circuit_split?.exists && <div className="split-detail">{memo.circuit_split.description}</div>}
                 </div>
               </div>
@@ -229,7 +220,7 @@ export default function App() {
               </div>
 
               <div className="confidence-row">
-                <span className="conf-label">Confidence:</span>
+                <span className="conf-label">Model self-assessment (unvalidated):</span>
                 <span className="conf-score">{memo.confidence}/10</span>
                 <span className="conf-rationale"> — {memo.confidence_rationale}</span>
               </div>
@@ -244,6 +235,7 @@ export default function App() {
           )}
         </div>
       </div>
+      </>}
     </div>
   )
 }
