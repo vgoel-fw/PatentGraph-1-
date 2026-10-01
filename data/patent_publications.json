@@ -1,0 +1,83 @@
+[
+  {
+    "publication_number": "US5970479A",
+    "patent_number": "5970479",
+    "title": "Methods and apparatus relating to the formulation and trading of risk management contracts",
+    "abstract": "Methods and apparatus which deal with the management of risk relating to specified, yet unknown, future events are disclosed. `Sponsor` stakeholders specify a particular product relating to an event or phenomenon for which there is a range of possible future outcomes. `Ordering` stakeholders then offer contracts relating to the predetermined phenomenon and corresponding range of outcomes. The offered contracts specify an entitlement or (pay-off) at the future time of maturity for each outcome, and a consideration (or premium) payable, in exchange, to a `counter-party` stakeholder. Independently of the offered contracts, the `counter-party` stakeholders input data as to their view of the likelihood of occurrence of each outcome in the predetermined range into the future, or specifically at the predetermined date of maturity. Each offered contract is priced by calculating counter-party premiums from the registered data, and a match attempted by a comparison of the offered premium with the calculated premiums. Matched contracts can be further traded until maturity, and at-maturity processing handles the exchange of entitlement as between the matched parties to the contract.",
+    "filing_date": "1993-05-28",
+    "publication_date": "1999-10-19",
+    "inventors": [
+      "Ian K. Shepherd"
+    ],
+    "publication_assignees": [
+      "Swychco Support Services Pty Ltd",
+      "Swychco Infrastructure Services Pty Ltd"
+    ],
+    "source_url": "https://patents.google.com/patent/US5970479A/en",
+    "pdf_url": "https://patentimages.storage.googleapis.com/3c/5a/d4/0fa8e587031dc4/US5970479.pdf",
+    "retrieved_at": "2026-10-01T03:24:36.733077+00:00",
+    "response_sha256": "6e34ec6e0a5e4192ad01f4584245fa4174d97d460cf5eab6958aca8a97309600",
+    "review_status": "unreviewed",
+    "notice": "Publication metadata; verify current ownership and legal status separately."
+  },
+  {
+    "publication_number": "US6912510B1",
+    "patent_number": "6912510",
+    "title": "Methods of exchanging an obligation",
+    "abstract": "A method of exchanging an obligation between parties where the exchange is administered by a supervisory institution that ensures real-time settling of obligations between parties by updating shadow records in real-time and instructing one or more exchange institutions to effect, from time to time, the exchange of obligations in accounts maintained external to the supervisory institution. Updates to the exchange institution accounts may reflect the net obligations of parties over a nominated period of time. The role of the supervisory institution is to ensure that obligations are only settled where parties have sufficient balance in their shadow records to complete the transaction. Obligations that can be exchanged include, but are not limited to: shares in financial or physical assets, participation rights in wagers, national or synthetic currencies, exchange settlement account deposits, taxation account deposits, and deposits of financial instruments or precious metals.",
+    "filing_date": "2000-05-09",
+    "publication_date": "2005-06-28",
+    "inventors": [
+      "Ian Kenneth Shepherd"
+    ],
+    "publication_assignees": [
+      "Alice Corp Pty Ltd"
+    ],
+    "source_url": "https://patents.google.com/patent/US6912510B1/en",
+    "pdf_url": "https://patentimages.storage.googleapis.com/ad/fb/d8/44e2d750d85a97/US6912510.pdf",
+    "retrieved_at": "2026-10-01T03:24:39.188961+00:00",
+    "response_sha256": "f52454365f4bcd2fe7e11808efeeb8f014540fe5be7cf0dfef18e224ecbb6fae",
+    "review_status": "unreviewed",
+    "notice": "Publication metadata; verify current ownership and legal status separately."
+  },
+  {
+    "publication_number": "US7149720B2",
+    "patent_number": "7149720",
+    "title": "Systems for exchanging an obligation",
+    "abstract": "A system for exchanging an obligation between parties where the exchange is administered by a supervisory institution that ensures real-time settling of obligations between parties by updating shadow records in real-time and instructing one or more exchange institutions to effect, from time to time, the exchange of obligations in accounts maintained external to the supervisory institution. Updates to the exchange institution accounts may reflect the net obligations of parties over a nominated period of time. The role of the supervisory institution is to ensure that obligations are only settled where parties have sufficient balance in their shadow records to complete the transaction. Obligations that can be exchanged include, but are not limited to: shares in financial or physical assets, participation rights in wagers, national or synthetic currencies, exchange settlement account deposits, taxation account deposits, and deposits of financial instruments or precious metals.",
+    "filing_date": "2002-12-31",
+    "publication_date": "2006-12-12",
+    "inventors": [
+      "Ian K. Shepherd"
+    ],
+    "publication_assignees": [
+      "Alice Corp Pty Ltd"
+    ],
+    "source_url": "https://patents.google.com/patent/US7149720B2/en",
+    "pdf_url": "https://patentimages.storage.googleapis.com/97/59/ad/4d3ebd9f7d9717/US7149720.pdf",
+    "retrieved_at": "2026-10-01T03:24:37.323670+00:00",
+    "response_sha256": "5f777f40405e0cacdb50cce43572ba7802df1522296e8f5af07faaefafd76352",
+    "review_status": "unreviewed",
+    "notice": "Publication metadata; verify current ownership and legal status separately."
+  },
+  {
+    "publication_number": "US7725375B2",
+    "patent_number": "7725375",
+    "title": "Systems and computer program products for exchanging an obligation",
+    "abstract": "Methods and apparatus which deal with the management of risk relating to specified, yet unknown, future events are disclosed. âSponsorâ stakeholders specify a particular product relating to an event or phenomenon for which there is a range of possible future outcomes. âOrderingâ stakeholders then offer contracts relating to the predetermined phenomenon and corresponding range of outcomes. The offered contracts specify an entitlement or (pay-off) at the future time of maturity for each outcome, and a consideration (or premium) payable, in exchange, to a âcounter-partyâ stakeholder. Independently of the offered contracts, the âcounter-partyâ stakeholders input data as to their view of the likelihood of occurrence of each outcome in the predetermined range into the future, or specifically at the predetermined date of maturity. Each offered contract is priced by the processing units by calculating counter-party premiums from the registered data, and a match attempted by a comparison of the offered premium with the calculated premiums. Matched contracts can be further traded until maturity, and at-maturity processing handles the exchange of entitlement as between the matched parties to the contract.",
+    "filing_date": "2005-06-27",
+    "publication_date": "2010-05-25",
+    "inventors": [
+      "Ian Kenneth Shepherd"
+    ],
+    "publication_assignees": [
+      "Alice Corp Pty Ltd"
+    ],
+    "source_url": "https://patents.google.com/patent/US7725375B2/en",
+    "pdf_url": "https://patentimages.storage.googleapis.com/62/04/38/898d0ac7c12ae7/US7725375.pdf",
+    "retrieved_at": "2026-10-01T03:24:38.167369+00:00",
+    "response_sha256": "bbc43b34703cb7ab9bed985a3536666a8810265cbc7cd1aa0417bb093e050f48",
+    "review_status": "unreviewed",
+    "notice": "Publication metadata; verify current ownership and legal status separately."
+  }
+]
