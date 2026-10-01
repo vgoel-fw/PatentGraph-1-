@@ -125,6 +125,7 @@ def find_cases_by_citation(citation_str: str) -> list[dict]:
 def get_claim_construction_cluster(patent_number: str) -> dict:
     cypher = """
     MATCH (p:Patent {number: $patent_number})-[:HAS_CLAIM]->(cl:Claim)-[:CONSTRUED_IN]->(c:Case)
+    WHERE cl.review_status = 'reviewed'
     RETURN c.id AS case_id, c.citation AS citation,
            cl.scope_ruling AS scope_ruling, cl.text_excerpt AS excerpt
     LIMIT 25
@@ -153,6 +154,7 @@ def get_judge_pattern(judge_name: str) -> dict:
     cypher = """
     MATCH (j:Judge {name: $judge_name})<-[:DECIDED_BY]-(c:Case)
     OPTIONAL MATCH (c)<-[:CONSTRUED_IN]-(cl:Claim)
+    WHERE cl.review_status = 'reviewed'
     RETURN c.id AS case_id, c.citation AS citation, c.date_filed AS date,
            cl.scope_ruling AS scope_ruling, c.holding_summary AS summary
     ORDER BY c.date_filed DESC
@@ -189,7 +191,7 @@ def get_full_subgraph(node_ids: list[str]) -> dict:
     )
     related = _run(
         "MATCH (cl:Claim)-[:CONSTRUED_IN]->(c:Case) WHERE c.id IN $ids "
-        "AND cl.id IS NOT NULL "
+        "AND cl.id IS NOT NULL AND cl.review_status = 'reviewed' "
         "WITH DISTINCT cl ORDER BY cl.id LIMIT $limit "
         "OPTIONAL MATCH (p:Patent)-[:HAS_CLAIM]->(cl) "
         "WITH cl, collect(DISTINCT properties(p)) AS patents "

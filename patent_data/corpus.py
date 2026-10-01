@@ -6,7 +6,7 @@ from html.parser import HTMLParser
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-PATENT = re.compile(r"(?:U\.?\s*S\.?\s*Patents?\s*(?:Nos?\.?\s*)?|Patent\s+Nos?\.?\s*)(\d{1,2},\d{3},\d{3})(?P<more>(?:\s*[,;]\s*\d{1,2},\d{3},\d{3}|\s*(?:,?\s*and)\s*\d{1,2},\d{3},\d{3})*)", re.I)
+PATENT = re.compile(r"(?:(?:U\.?\s*S\.?|United States)\s*Patents?\s*(?:Nos?\.?\s*)?|Patent\s+Nos?\.?\s*)(\d{1,2},\d{3},\d{3})(?P<more>(?:\s*\([^)]{0,80}\))?(?:\s*[,;]\s*\d{1,2},\d{3},\d{3}|\s*(?:,?\s*and)\s*\d{1,2},\d{3},\d{3})*)", re.I)
 
 class TextParser(HTMLParser):
     def __init__(self):
