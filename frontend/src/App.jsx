@@ -35,7 +35,7 @@ function TrustBadge({ verified }) {
 
 export default function App() {
   const [sharedState] = useState(readSharedGraph)
-  const [workspace, setWorkspace] = useState(window.location.hash.startsWith('#graph=') ? 'research' : 'patents')
+  const [workspace, setWorkspace] = useState('research')
   const [question, setQuestion] = useState('')
   const [memo, setMemo] = useState(() => sharedState.snapshot ? {
     subgraph: sharedState.snapshot.graph,
