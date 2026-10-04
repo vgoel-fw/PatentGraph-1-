@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "node --test src/graphData.test.js"
+    "test": "node --test src/graphData.test.js src/claimCharts.test.js"
   },
   "dependencies": {
     "jspdf": "^3.0.3",
