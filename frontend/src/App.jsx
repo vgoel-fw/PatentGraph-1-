@@ -1,6 +1,9 @@
 import { useState, useRef } from 'react'
 import GraphPanel from './GraphPanel'
 import PatentWorkspace, { AssessmentResult } from './PatentWorkspace'
+import ClaimCharts from './ClaimCharts.jsx'
+import LegalUpdates from './LegalUpdates'
+import OutcomeWorkspace from './OutcomeWorkspace'
 import { normalizeGraph } from './graphData'
 import { readSharedGraph } from './graphWorkspace'
 import './App.css'
@@ -90,8 +93,8 @@ export default function App() {
         </div>
       </div>
 
-      <nav className="practice-tabs" aria-label="Research workspace">{[['patents','Patent evidence'],['research','Precedent research'],['outcomes','Outcome comparison']].map(([id,label]) => <button key={id} aria-current={workspace === id ? 'page' : undefined} onClick={() => setWorkspace(id)}>{label}</button>)}</nav>
-      {workspace !== 'research' ? <PatentWorkspace key={workspace} api={API} view={workspace} /> : <>
+      <nav className="practice-tabs" aria-label="Research workspace">{[['patents','Patent evidence'],['research','Precedent research'],['outcomes','Court comparisons'],['charts','Claim charts'],['updates','Legal developments']].map(([id,label]) => <button key={id} aria-current={workspace === id ? 'page' : undefined} onClick={() => setWorkspace(id)}>{label}</button>)}</nav>
+      {workspace !== 'research' ? (workspace === 'charts' ? <ClaimCharts /> : workspace === 'updates' ? <LegalUpdates api={API} /> : workspace === 'outcomes' ? <OutcomeWorkspace api={API} /> : <PatentWorkspace key={workspace} api={API} view={workspace} />) : <>
       <div className="search-row">
         <input
           ref={inputRef}
