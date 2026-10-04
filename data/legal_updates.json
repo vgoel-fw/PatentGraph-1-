@@ -1,0 +1,66 @@
+{
+  "checked_on": "2026-10-03",
+  "coverage": "Selected US patent developments; curated snapshot, not a complete citator or live news feed.",
+  "items": [
+    {
+      "id": "smed-2026-09-29",
+      "title": "USPTO supplements eligibility-declaration guidance",
+      "published_on": "2026-09-29",
+      "authority": "USPTO",
+      "type": "agency guidance",
+      "issues": ["eligibility"],
+      "forums": ["prosecution"],
+      "court_ids": [],
+      "summary": "The memorandum adds a flowchart and best practices for subject matter eligibility declarations under Rule 132. It supplements the April 2026 memorandum and expressly says it introduces no new practice or procedure.",
+      "practice_note": "In prosecution, identify the particular eligibility proposition supported by the declaration and distinguish factual evidence from argument. This is agency guidance, not a new district-court eligibility standard.",
+      "source_url": "https://www.uspto.gov/sites/default/files/documents/smeds-memo-20260929.pdf",
+      "pinpoint": "Pages 2–4, sections II–IV",
+      "review_status": "source checked; legal characterization pending attorney review"
+    },
+    {
+      "id": "director-review-2026-06-29",
+      "title": "USPTO updates Director Review process guidance",
+      "published_on": "2026-06-29",
+      "authority": "USPTO / PTAB",
+      "type": "agency procedure",
+      "issues": ["anticipation", "obviousness", "indefiniteness", "eligibility"],
+      "forums": ["ptab"],
+      "court_ids": [],
+      "summary": "The USPTO identifies June 29, 2026 as the update date for section 3.B of its Director Review process page. The page provides implementation details for review under 37 CFR 42.75.",
+      "practice_note": "Consult the current request requirements and the operative order before planning Director Review. A review request or its denial is not a binary patent-validity outcome.",
+      "source_url": "https://www.uspto.gov/patents/ptab/decisions/director-review-process",
+      "pinpoint": "Update notice and section 3.B",
+      "review_status": "source checked; legal characterization pending attorney review"
+    },
+    {
+      "id": "ptab-manufacturing-2026-03-11",
+      "title": "Additional PTAB discretionary institution considerations",
+      "published_on": "2026-03-11",
+      "authority": "USPTO / PTAB",
+      "type": "agency discretion",
+      "issues": ["anticipation", "obviousness", "indefiniteness", "eligibility"],
+      "forums": ["ptab"],
+      "court_ids": [],
+      "summary": "The USPTO identifies US manufacturing, related investment, and small-business petitioner circumstances as additional considerations in discretionary institution decisions for IPR and PGR proceedings.",
+      "practice_note": "Check the memorandum’s applicability to the patent-owner briefing deadline. Institution discretion and the merits of a final written decision must remain separate in outcome datasets.",
+      "source_url": "https://www.uspto.gov/subscription-center/2026/uspto-issues-additional-discretionary-institution-facts",
+      "pinpoint": "Announcement, numbered considerations 1–3 and applicability paragraph",
+      "review_status": "source checked; legal characterization pending attorney review"
+    },
+    {
+      "id": "ecofactor-2025-enbanc",
+      "title": "EcoFactor: support for a royalty expert’s license-based rate",
+      "published_on": "2025-05-21",
+      "authority": "Federal Circuit (en banc)",
+      "type": "precedential opinion",
+      "issues": ["damages"],
+      "forums": ["district_court", "federal_circuit"],
+      "court_ids": [],
+      "summary": "The en banc court held that the licenses at issue did not support the expert’s conclusion that prior licensees agreed to the asserted per-unit royalty rate, and found an abuse of discretion in failing to exclude that testimony.",
+      "practice_note": "Inspect the operative license terms and the factual foundation for the proposed royalty rate. This damages-evidence ruling does not itself establish infringement or validity.",
+      "source_url": "https://www.cafc.uscourts.gov/opinions-orders/23-1101.OPINION.5-21-2025_2518737.pdf",
+      "pinpoint": "Opinion page 12; PDF page 12",
+      "review_status": "source checked; subsequent treatment requires separate verification"
+    }
+  ]
+}

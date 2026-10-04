@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from prediction.cohorts import Context, attach_assessment, estimate, load_outcomes
+from prediction.cohorts import Context, attach_assessment, assess, load_outcomes
 
 load_dotenv()
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -136,4 +136,15 @@ def patent_library(q: str = Query(default='', max_length=200), limit: int = Quer
 
 @app.post('/assessment')
 def outcome_assessment(context: Context):
-    return estimate(load_outcomes(), context)
+    return assess(load_outcomes(), context)
+
+
+@app.get('/assessment/options')
+def assessment_options():
+    from prediction.jurisdictions import options
+    return options()
+
+@app.get('/legal-updates')
+def legal_updates(issue: str | None = None, forum: str | None = None):
+    from legal.updates import matching_updates
+    return matching_updates(issue, forum)

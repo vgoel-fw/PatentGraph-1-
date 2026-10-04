@@ -18,7 +18,8 @@ def evaluate(rows):
         if len({r['outcome'] for r in group})!=1:conflicts+=1;continue
         row=min(group,key=lambda r:r['decision_date']);eligible_count+=1
         cutoff=date.fromisoformat(row['decision_date'])-timedelta(days=1)
-        context=Context(issue=row['issue'],forum=row['forum'],stage=row['stage'],as_of=cutoff)
+        context=Context(issue=row['issue'],forum=row['forum'],stage=row['stage'],as_of=cutoff,
+                        court_id=row.get('court_id'),jurisdiction=row.get('jurisdiction'))
         training=[r for r in rows if r.get('case_id')!=row['case_id']]
         result=estimate(training,context,exclude_litigation=row['litigation_id'])
         if result['historical_rate'] is not None:
